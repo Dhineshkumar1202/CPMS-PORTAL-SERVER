@@ -40,8 +40,8 @@ export const register = async (req, res) => {
 }
 export const login = async (req, res) => {
     try {
-        const { email, password, role } = req.body;
-        if (!email || !password || !role) {
+        const { email, password } = req.body;
+        if (!email || !password ) {
             return res.status(400).json({
                 message: 'something is missing',
                 success: false
@@ -62,27 +62,27 @@ export const login = async (req, res) => {
             })
         };
 
-        if (role != user.role) {
-            return res.status(400).json({
-                message: "Account doesn't exist with current role.",
-                success: false,
-            })
-        };
+        // if (role != user.role) {
+        //     return res.status(400).json({
+        //         message: "Account doesn't exist with current role.",
+        //         success: false,
+        //     })
+        // };
 
         const tokenData = {
             userId: user._id
         }
-        const token = await jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
+        const token = jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
 
 
-        user = {
-            _id: user._id,
-            fullname: user.fullname,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            role: user.role,
-            profile: user.profile
-        }
+        // user = {
+        //     _id: user._id,
+        //     fullname: user.fullname,
+        //     email: user.email,
+        //     phoneNumber: user.phoneNumber,
+        //     role: user.role,
+        //     profile: user.profile
+        // }
 
         return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 60 * 1000, httpOnly: true, samesite: 'strict' }).json({
             message: `Welcome back ${user.fullname}`,
