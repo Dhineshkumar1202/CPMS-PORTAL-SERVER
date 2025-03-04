@@ -36,6 +36,7 @@ app.use('/api/company',companyRoute);
 app.use('/api/job',jobRoute);
 app.use('/api/application',applicationRoute);
 
+connectDB();
 
 
 
@@ -45,6 +46,8 @@ app.use('/api/application',applicationRoute);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    connectDB();
+    
     console.log(`Server running at Port ${PORT}`);
+
 });
+
