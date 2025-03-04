@@ -23,7 +23,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Test Route
-app.get("/home", (req, res) => {
+app.get("/", (req, res) => {
     return res.status(200).json({
         message: "I am coming from backend",
         success: true
