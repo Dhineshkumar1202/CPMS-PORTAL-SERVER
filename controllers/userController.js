@@ -69,20 +69,20 @@ export const login = async (req, res) => {
             })
         };
 
-        // const tokenData = {
-        //     userId: user._id
-        // }
-        // const token = await jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
+        const tokenData = {
+            userId: user._id
+        }
+        const token = await jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
 
 
-        // user = {
-        //     _id: user._id,
-        //     fullname: user.fullname,
-        //     email: user.email,
-        //     phoneNumber: user.phoneNumber,
-        //     role: user.role,
-        //     profile: user.profile
-        // }
+        user = {
+            _id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            profile: user.profile
+        }
 
         return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 60 * 1000, httpOnly: true, samesite: 'strict' }).json({
             message: `Welcome back ${user.fullname}`,
@@ -137,7 +137,7 @@ export const updateProfile = async (req, res) => {
 
         user = {
             _id: user._id,
-            fullname: user.fullname, // ✅ Fixed typo
+            fullname: user.fullname, 
             email: user.email,
             phoneNumber: user.phoneNumber,
             role: user.role,
