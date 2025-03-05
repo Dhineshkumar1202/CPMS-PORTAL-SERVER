@@ -8,6 +8,7 @@ import companyRoute from "./routes/companyRoute.js"
 import jobRoute from "./routes/jobRoute.js"
 import applicationRoute from "./routes/applicationRoute.js";
 dotenv.config({});
+connectDB();
 
 const app = express();
 
@@ -36,7 +37,7 @@ app.use('/api/company',companyRoute);
 app.use('/api/job',jobRoute);
 app.use('/api/application',applicationRoute);
 
-connectDB();
+
 
 
 
@@ -45,9 +46,5 @@ connectDB();
 
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    
-    console.log(`Server running at Port ${PORT}`);
-
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
