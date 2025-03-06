@@ -2,7 +2,8 @@ import jwt from "jsonwebtoken";
 
 const isAuthenticated = async (req, res, next) => {
     try {
-        const token = req.cookies?.token || req.header("Authorization")?.split(" ")[1];
+        const token =
+            req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
 
         if (!token) {
             return res.status(401).json({
@@ -11,16 +12,14 @@ const isAuthenticated = async (req, res, next) => {
             });
         }
 
-        if (!process.env.SECRET_KEY) {
-            console.error("SECRET_KEY is missing in environment variables.");
-            return res.status(500).json({
-                message: "Internal server error. Please try again later.",
-                success: false,
-            });
-        }
-
-        try {
-            const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        // Verify the token
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+            if (err) {
+                return res.status(401).json({
+                    message: "Token expired or invalid. Please log in again.",
+                    success: false,
+                });
+            }
 
             if (!decoded || !decoded.userId) {
                 return res.status(401).json({
@@ -32,12 +31,7 @@ const isAuthenticated = async (req, res, next) => {
             req.id = decoded.userId;
             req.user = decoded;
             next();
-        } catch (error) {
-            return res.status(401).json({
-                message: "Token expired or invalid. Please log in again.",
-                success: false,
-            });
-        }
+        });
     } catch (error) {
         console.error("Authentication Error:", error);
         return res.status(500).json({
