@@ -68,11 +68,10 @@ export const login = async (req, res) => {
                 success: false,
             })
         };
-
         const tokenData = {
             userId: user._id
         }
-        const token = await jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
+        const token =  jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
 
 
         user = {
@@ -107,42 +106,39 @@ export const logout = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
-        const file = req.file;
+        const userId = req.user?.userId; // Ensure user ID is retrieved correctly
 
-        let skillsArray;
-        if (skills) {
-            skillsArray = skills.split(",");
+        console.log("User ID from middleware:", userId);
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Unauthorized: No user found",
+                success: false
+            });
         }
-
-        const userId = req.user.userId; // 
-        console.log("User ID from middleware:", userId); 
 
         let user = await User.findById(userId);
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(404).json({
                 message: "User not found",
                 success: false
             });
         }
 
-        // Updating data 
+        // Ensure profile object exists before updating nested properties
+        if (!user.profile) {
+            user.profile = {};
+        }
+
+        // Updating data
         if (fullname) user.fullname = fullname;
         if (email) user.email = email;
         if (phoneNumber) user.phoneNumber = phoneNumber;
         if (bio) user.profile.bio = bio;
-        if (skills) user.profile.skills = skillsArray;
+        if (skills) user.profile.skills = skills.split(","); // Convert to array
 
         await user.save();
-
-        user = {
-            _id: user._id,
-            fullname: user.fullname, 
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            role: user.role,
-            profile: user.profile
-        };
 
         return res.status(200).json({
             message: "Profile updated successfully.",
@@ -151,14 +147,14 @@ export const updateProfile = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             message: "Internal Server Error",
             success: false
         });
     }
-}
-   
+};
+
 
 
 
