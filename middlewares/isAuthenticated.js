@@ -5,7 +5,7 @@ const isAuthenticated = async (req, res, next) => {
         const token =
             req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
 
-        console.log("Extracted Token:", token); 
+        console.log("Extracted Token:", token); // Debugging
 
         if (!token) {
             return res.status(401).json({
@@ -17,23 +17,22 @@ const isAuthenticated = async (req, res, next) => {
         // Verify the token
         jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
             if (err) {
-                console.log("JWT Error:", err.message); 
                 return res.status(401).json({
                     message: "Token expired or invalid. Please log in again.",
                     success: false,
                 });
             }
 
-            console.log("Decoded Token:", decoded); 
+            console.log("Decoded Token:", decoded); // Debugging
 
-            if (!decoded || !decoded.userId) {
+            if (!decoded?.userId) {
                 return res.status(401).json({
-                    message: "Invalid token structure.",
+                    message: "Invalid token.",
                     success: false,
                 });
             }
 
-            req.user = { userId: decoded.userId }; 
+            req.user = { userId: decoded.userId }; // ✅ Fix: Assign correctly
             next();
         });
     } catch (error) {
