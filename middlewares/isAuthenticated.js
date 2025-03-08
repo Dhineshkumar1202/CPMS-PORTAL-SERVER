@@ -5,7 +5,7 @@ const isAuthenticated = async (req, res, next) => {
         const token =
             req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
 
-        console.log("Extracted Token:", token); // Debugging
+        console.log("Extracted Token:", token); 
 
         if (!token) {
             return res.status(401).json({
@@ -23,7 +23,7 @@ const isAuthenticated = async (req, res, next) => {
                 });
             }
 
-            console.log("Decoded Token:", decoded); // Debugging
+            console.log("Decoded Token:", decoded); 
 
             if (!decoded?.userId) {
                 return res.status(401).json({
@@ -32,7 +32,7 @@ const isAuthenticated = async (req, res, next) => {
                 });
             }
 
-            req.user = { userId: decoded.userId }; // ✅ Fix: Assign correctly
+            req.user = { userId: decoded.userId }; 
             next();
         });
     } catch (error) {
