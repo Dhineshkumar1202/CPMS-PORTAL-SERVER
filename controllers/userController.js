@@ -106,9 +106,7 @@ export const logout = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
-        const userId = req.user?.userId; // Ensure user ID is retrieved correctly
-
-        console.log("User ID from middleware:", userId);
+        const userId = req.user?.userId;
 
         if (!userId) {
             return res.status(401).json({
@@ -126,17 +124,17 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        // Ensure profile object exists before updating nested properties
-        if (!user.profile) {
-            user.profile = {};
+        // Handle file upload (if any)
+        if (req.file) {
+            user.profile.resume = req.file.path; // Save file path to user profile
         }
 
-        // Updating data
+        // Update user data
         if (fullname) user.fullname = fullname;
         if (email) user.email = email;
         if (phoneNumber) user.phoneNumber = phoneNumber;
         if (bio) user.profile.bio = bio;
-        if (skills) user.profile.skills = skills.split(","); // Convert to array
+        if (skills) user.profile.skills = skills.split(",");
 
         await user.save();
 
