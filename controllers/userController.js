@@ -1,13 +1,6 @@
 import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-// import getDataUri from "../utils/datauri.js";
-
-
-   
-
-
-import cloudinary from "../utils/cloudinary.js";
 
 // Register User
 export const register = async (req, res) => {
@@ -135,29 +128,28 @@ export const logout = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
-        if (!fullname || !email || !phoneNumber || !bio || !skills) {
-            return res.status(400).json({
-                message: "Something is missing",
-                success: false
-            });
+        const file = req.file;
+
+
+        let skillsArray;
+        if(skills){
+            skillsArray = skills.split(",");
         }
-
-        const skillsArray = skills.split(",");
-        const userId = req.user.id; 
-
+        const userId = req.id; // middleware authentication
         let user = await User.findById(userId);
+
         if (!user) {
             return res.status(400).json({
                 message: "User not found.",
                 success: false
-            });
+            })
         }
-
-        if (fullname) user.fullname = fullname;
-        if (email) user.email = email;
-        if (phoneNumber) user.phoneNumber = phoneNumber;
-        if (bio) user.profile.bio = bio;
-        if (skills) user.profile.skills = skillsArray;
+        // updating data
+        if(fullname) user.fullname = fullname
+        if(email) user.email = email
+        if(phoneNumber)  user.phoneNumber = phoneNumber
+        if(bio) user.profile.bio = bio
+        if(skills) user.profile.skills = skillsArray
 
         await user.save();
 
@@ -183,3 +175,5 @@ export const updateProfile = async (req, res) => {
         });
     }
 };
+
+
