@@ -138,11 +138,11 @@ export const updateProfile = async (req, res) => {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
         const file = req.file;
 
-
         let skillsArray;
         if (skills) {
             skillsArray = skills.split(",");
         }
+
         const userId = req.id; // middleware authentication
         let user = await User.findById(userId);
 
@@ -150,14 +150,27 @@ export const updateProfile = async (req, res) => {
             return res.status(400).json({
                 message: "User not found.",
                 success: false
-            })
+            });
         }
-        // updating data
-        if (fullname) user.fullname = fullname
-        if (email) user.email = email
-        if (phoneNumber) user.phoneNumber = phoneNumber
-        if (bio) user.profile.bio = bio
-        if (skills) user.profile.skills = skillsArray
+
+        // Updating data
+        if (fullname) user.fullname = fullname;
+        if (email) user.email = email;
+        if (phoneNumber) user.phoneNumber = phoneNumber;
+        if (bio) user.profile.bio = bio;
+        if (skills) user.profile.skills = skillsArray;
+
+        // Upload file to Cloudinary if file is provided
+        if (file) {
+            const fileUri = getDataUri(file);
+            const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
+                resource_type: "auto"
+              });
+              
+
+            user.profile.resume = cloudResponse.secure_url;
+            user.profile.resumeOriginalName = file.originalname;
+        }
 
         await user.save();
 
@@ -183,5 +196,6 @@ export const updateProfile = async (req, res) => {
         });
     }
 };
+
 
 
