@@ -1,7 +1,4 @@
 import mongoose from 'mongoose'
-import { Job } from './jobModel.js'
-import { type } from 'os'
-import { stringify } from 'querystring'
 
 const applicationShema = new mongoose.Schema({
     job:{
