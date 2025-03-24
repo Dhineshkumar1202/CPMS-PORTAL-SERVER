@@ -12,7 +12,7 @@ export const applyJob = async (req, res) => {
                 success: false
             })
         };
-        // check if the user has already applied for the job
+       
         const existingApplication = await Application.findOne({ job: jobId, applicant: userId });
 
         if (existingApplication) {
@@ -22,7 +22,7 @@ export const applyJob = async (req, res) => {
             });
         }
 
-        // check if the jobs exists
+   
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({
