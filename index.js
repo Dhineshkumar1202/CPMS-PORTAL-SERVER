@@ -21,6 +21,16 @@ const corsOptions = {
     origin: "*", 
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
+  
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ], // Specify allowed headers
+    credentials: true, // Allow cookies & authorization headers
+    optionsSuccessStatus: 204, // Handle preflight requests properly
+    preflightContinue: false, // Don't pass preflight response to next handler
   };
   
   app.use(cors(corsOptions));
