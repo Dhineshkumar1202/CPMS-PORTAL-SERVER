@@ -18,22 +18,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-    origin: "*", 
+    origin: "*",
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
-  
+
     allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Methods",
+        "Access-Control-Allow-Headers",
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Accept",
     ], // Specify allowed headers
-    credentials: true, // Allow cookies & authorization headers
     optionsSuccessStatus: 204, // Handle preflight requests properly
     preflightContinue: false, // Don't pass preflight response to next handler
-  };
-  
-  app.use(cors(corsOptions));
+};
+
+app.use(cors(corsOptions));
 
 // app.use(cors())
 
@@ -46,10 +48,10 @@ app.get("/", (req, res) => {
 });
 
 // APIs
-app.use('/api/user',userRoute);
-app.use('/api/company',companyRoute);
-app.use('/api/job',jobRoute);
-app.use('/api/application',applicationRoute);
+app.use('/api/user', userRoute);
+app.use('/api/company', companyRoute);
+app.use('/api/job', jobRoute);
+app.use('/api/application', applicationRoute);
 
 
 
