@@ -18,22 +18,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-    origin: "https://cpms-portal-server-cpms1.vercel.app",
-    methods: "GET,POST,PUT,DELETE",
+    origin: "https://cpms-portal-client-cpms1.vercel.app",
     credentials: true,
 
-    allowedHeaders: [
-        "Access-Control-Allow-Origin",
-        "Access-Control-Allow-Methods",
-        "Access-Control-Allow-Headers",
-        "Content-Type",
-        "Authorization",
-        "X-Requested-With",
-        "Accept",
-    ], // Specify allowed headers
-    // optionsSuccessStatus: 204, // Handle preflight requests properly
-    // preflightContinue: false, // Don't pass preflight response to next handler
-};
+}
 
 app.use(cors(corsOptions));
 
