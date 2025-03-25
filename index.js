@@ -17,13 +17,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const corsOptions = {
-    origin: "https://cpms-portal-client-cpms1.vercel.app", 
-    methods: "GET,POST,PUT,DELETE",
-    credentials: true,
-  };
+// const corsOptions = {
+//     origin: "https://cpms-portal-client-cpms1.vercel.app", 
+//     methods: "GET,POST,PUT,DELETE",
+//     credentials: true,
+//   };
   
-  app.use(cors(corsOptions));
+//   app.use(cors(corsOptions));
+
+app.use(cors())
 
 // Test Route
 app.get("/", (req, res) => {
