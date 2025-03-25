@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-    origin: "*",
+    origin: "https://cpms-portal-server-cpms1.vercel.app",
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
 
