@@ -9,25 +9,47 @@ export const register = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, password, role } = req.body;
 
+        // Check if required fields are present
         if (!fullname || !email || !phoneNumber || !password || !role) {
             return res.status(400).json({
-                message: "Something is missing",
+                message: "All fields are required",
                 success: false
             });
         }
-        const file = req.file;
-        const fileUri = getDataUri(file);
-        const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
 
-        const user = await User.findOne({ email });
-        if (user) {
+        // Check if the user already exists before uploading a file
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
             return res.status(400).json({
                 message: "User already exists with this email",
                 success: false
             });
         }
 
+        // Handle file upload
+        if (!req.file) {
+            return res.status(400).json({
+                message: "Profile picture is required",
+                success: false
+            });
+        }
+
+        let cloudResponse;
+        try {
+            const fileUri = getDataUri(req.file);
+            cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+        } catch (uploadError) {
+            console.error("Cloudinary Upload Error:", uploadError);
+            return res.status(500).json({
+                message: "File upload failed",
+                success: false
+            });
+        }
+
+        // Hash the password
         const hashPassword = await bcrypt.hash(password, 10);
+
+        // Create user in the database
         await User.create({
             fullname,
             email,
@@ -40,11 +62,12 @@ export const register = async (req, res) => {
         });
 
         return res.status(201).json({
-            message: "Account created successfully.",
+            message: "Account created successfully",
             success: true
         });
+
     } catch (error) {
-        console.error(error);
+        console.error("Register Error:", error);
         return res.status(500).json({
             message: "Internal Server Error",
             success: false
