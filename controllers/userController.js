@@ -4,74 +4,52 @@ import jwt from "jsonwebtoken";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
 
+// Generate JWT Token
+const generateToken = (userId) => {
+    return jwt.sign({ userId }, process.env.SECRET_KEY, { expiresIn: '1d' });
+};
+
 // Register User
 export const register = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, password, role } = req.body;
 
-        // Check if required fields are present
         if (!fullname || !email || !phoneNumber || !password || !role) {
-            return res.status(400).json({
-                message: "All fields are required",
-                success: false
-            });
+            return res.status(400).json({ message: "All fields are required", success: false });
         }
 
-        // Check if the user already exists before uploading a file
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({
-                message: "User already exists with this email",
-                success: false
-            });
+            return res.status(400).json({ message: "User already exists with this email", success: false });
         }
 
-        // Handle file upload
         if (!req.file) {
-            return res.status(400).json({
-                message: "Profile picture is required",
-                success: false
-            });
+            return res.status(400).json({ message: "Profile picture is required", success: false });
         }
 
-        let cloudResponse;
-        try {
-            const fileUri = getDataUri(req.file);
-            cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-        } catch (uploadError) {
-            console.error("Cloudinary Upload Error:", uploadError);
-            return res.status(500).json({
-                message: "File upload failed",
-                success: false
-            });
-        }
-
-        // Hash the password
+        const fileUri = getDataUri(req.file);
+        const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
         const hashPassword = await bcrypt.hash(password, 10);
 
-        // Create user in the database
-        await User.create({
+        const user = await User.create({
             fullname,
             email,
             phoneNumber,
             password: hashPassword,
             role,
-            profile: {
-                profilePhoto: cloudResponse.secure_url,
-            }
+            profile: { profilePhoto: cloudResponse.secure_url }
         });
 
+        const token = generateToken(user._id);
         return res.status(201).json({
             message: "Account created successfully",
-            success: true
+            success: true,
+            token,
+            user
         });
-
     } catch (error) {
         console.error("Register Error:", error);
-        return res.status(500).json({
-            message: "Internal Server Error",
-            success: false
-        });
+        return res.status(500).json({ message: "Internal Server Error", success: false });
     }
 };
 
@@ -81,69 +59,50 @@ export const login = async (req, res) => {
         const { email, password, role } = req.body;
 
         if (!email || !password || !role) {
-            return res.status(400).json({
-                message: "Something is missing",
-                success: false
-            });
+            return res.status(400).json({ message: "Something is missing", success: false });
         }
 
         const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({
-                message: "Incorrect email or password",
-                success: false
-            });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(400).json({ message: "Incorrect email or password", success: false });
         }
 
-        const isPasswordMatch = await bcrypt.compare(password, user.password);
-        if (!isPasswordMatch) {
-            return res.status(400).json({
-                message: "Incorrect email or password",
-                success: false
-            });
-        }
-
-        // Check role
         if (role !== user.role) {
-            return res.status(400).json({
-                message: "Account doesn't exist with current role.",
-                success: false
-            });
+            return res.status(400).json({ message: "Account doesn't exist with current role.", success: false });
         }
 
-        const tokenData = { userId: user._id };
-        const token = jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
-
-        const userData = {
-            _id: user._id,
-            fullname: user.fullname,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            role: user.role,
-            profile: user.profile
-        };
-
-        return res.status(200)
-            .cookie("token", token, { maxAge: 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' })
-            .json({
-                message: `Welcome back ${user.fullname}`,
-                user: userData,
-                success: true
-            });
+        const token = generateToken(user._id);
+        return res.status(200).json({
+            message: `Welcome back ${user.fullname}`,
+            success: true,
+            token,
+            user
+        });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({
-            message: "Internal Server Error",
-            success: false
-        });
+        return res.status(500).json({ message: "Internal Server Error", success: false });
     }
 };
 
-// Logout User
+// Middleware to verify token
+export const verifyToken = (req, res, next) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ message: "Access Denied. No token provided", success: false });
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        req.userId = decoded.userId;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid Token", success: false });
+    }
+};
+// Logout User (Client should remove the token)
 export const logout = async (req, res) => {
     try {
-        return res.status(200).cookie("token", "", { maxAge: 0 }).json({
-            message: "Logout successfully.",
+        return res.status(200).json({
+            message: "Logout successful. Please remove the token from storage.",
             success: true
         });
     } catch (error) {
@@ -154,71 +113,37 @@ export const logout = async (req, res) => {
         });
     }
 };
+
 
 // Update Profile
 export const updateProfile = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
         const file = req.file;
-
-        let skillsArray;
-        if (skills) {
-            skillsArray = skills.split(",");
-        }
-
-        const userId = req.id; 
-        let user = await User.findById(userId);
+        const skillsArray = skills ? skills.split(",") : [];
+        const user = await User.findById(req.userId);
 
         if (!user) {
-            return res.status(400).json({
-                message: "User not found.",
-                success: false
-            });
+            return res.status(400).json({ message: "User not found.", success: false });
         }
 
-        // Updating data
-        if (fullname) user.fullname = fullname;
-        if (email) user.email = email;
-        if (phoneNumber) user.phoneNumber = phoneNumber;
-        if (bio) user.profile.bio = bio;
-        if (skills) user.profile.skills = skillsArray;
+        user.fullname = fullname || user.fullname;
+        user.email = email || user.email;
+        user.phoneNumber = phoneNumber || user.phoneNumber;
+        user.profile.bio = bio || user.profile.bio;
+        user.profile.skills = skillsArray.length ? skillsArray : user.profile.skills;
 
-        // Upload file to Cloudinary if file is provided
         if (file) {
             const fileUri = getDataUri(file);
-            const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
-                resource_type: "auto"
-              });
-              
-
+            const cloudResponse = await cloudinary.uploader.upload(fileUri.content, { resource_type: "auto" });
             user.profile.resume = cloudResponse.secure_url;
             user.profile.resumeOriginalName = file.originalname;
         }
 
         await user.save();
-
-        const updatedUser = {
-            _id: user._id,
-            fullname: user.fullname,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            role: user.role,
-            profile: user.profile
-        };
-
-        return res.status(200).json({
-            message: "Profile updated successfully.",
-            user: updatedUser,
-            success: true
-        });
+        return res.status(200).json({ message: "Profile updated successfully.", success: true, user });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({
-            message: "Internal Server Error",
-            success: false
-        });
+        return res.status(500).json({ message: "Internal Server Error", success: false });
     }
 };
-
-
-
