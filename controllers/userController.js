@@ -102,7 +102,7 @@ export const verifyToken = (req, res, next) => {
 export const logout = async (req, res) => {
     try {
         return res.status(200).json({
-            message: "Logout successful. Please remove the token from storage.",
+            message: "Logout successful.",
             success: true
         });
     } catch (error) {
