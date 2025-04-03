@@ -20,7 +20,7 @@ app.use(cookieParser());
 
 
 const corsOptions = {
-    origin: "http://localhost:5173",
+    origin: "https://cpms-portal-client-cpms1.vercel.app",
     credentials: true,
 
 }
